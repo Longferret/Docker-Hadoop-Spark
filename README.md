@@ -91,7 +91,9 @@ The ouput if of the form `SEP_ACTOR \t ACTOR \t DISTANCE`.
 
 The `ACTOR` has a separation degree of `DISTANCE` from `SEP_ACTOR` and `SEP_ACTOR`, `ACTOR` are the codes of the actors.
 
-The output I generated is in the compressed folder `workdir/outputs/outputs.tar.xz` as MR_Sep_Deg.txt
+A Distance of 2147483647 means the actor is not connected to the separation actor.
+
+The output I generated is at `workdir/outputs/MR_Sep_Deg.txt`.
 
 ## Average Rating using Hadoop
 To calculate the average rating of all actors, we will use the file "AvgRating.java".
@@ -126,7 +128,7 @@ The ouput if of the form `ACTOR \t AVGRATING`.
 
 `ACTOR` is the code of the actor and `AVGRATING` is the average rating of the actor.
 
-The output I generated is in the compressed folder `workdir/outputs/outputs.tar.xz` as MR_AvgRating.txt
+The output I generated is at `workdir/outputs/MR_AvgRating.txt`.
 
 
 ## Average Rating using Spark Scala
@@ -146,7 +148,7 @@ The ouput if of the form `ACTOR \t AVGRATING`.
 
 `ACTOR` is the code of the actor and `AVGRATING` is the average rating of the actor.
 
-The output I generated is in the compressed folder `workdir/outputs/outputs.tar.xz` as SCALA_AvgRating.txt
+The output I generated is at `workdir/outputs/SCALA_AvgRating.txt`.
 
 
 
