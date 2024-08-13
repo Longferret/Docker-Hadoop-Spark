@@ -33,6 +33,7 @@ mkdir AvgRating
 mkdir AvgRating/Separation_Degree_classes
 hdfs dfs -mkdir -p /data/openbeer/WorkDir
 hdfs dfs -mkdir -p /data/openbeer/WorkDir/inputs
+exit
 ```
 Note: All the command lines listed from here are made to work from the host terminal inside the directory "workdir".
 
@@ -43,6 +44,7 @@ docker cp title.ratings.tsv namenode:title.ratings.tsv
 docker exec -it namenode bash
 hdfs dfs -put -f title.principals.tsv   /data/openbeer/WorkDir/inputs/title.principals.tsv  
 hdfs dfs -put -f title.ratings.tsv   /data/openbeer/WorkDir/inputs/title.ratings.tsv  
+exit
 ```
 
 That's it we are all set up to run the different algorithms !
@@ -150,15 +152,24 @@ The output I generated is in the compressed folder `workdir/outputs/outputs.tar.
 
 # Execution Times
 
-| Algorithm    | Time |
+| Program    | Execution Time |
 | -------- | ------- |
-| Separation_Degree.java  | 1h 20min    |
+| Separation_Degree.java  | 36m 20sec    |
 | AvgRating.java | 4 min     |
 | AverageRating.scala    | 58 sec     |
 
-This time of Separation_Degree.java is for 2 actors
+The specification of my laptop:
+* Model: Predator PH315-53
+* Processor: Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz   2.59 GHz
+* Ram: 16,0 Go
+* OS: Windows 10
 
-2 Videos demonstrating the execution of average rating in Scala and Hadoop are in the folder `videos`.
+
+I made videos demonstrating the execution of each program:
+* For Hadoop Separation degree see: `workdir/videos/MR_SEP_DEG.tar.xz`
+* For Hadoop average rating see: `workdir/videos/MR_AVG_RATING.tar.xz`
+* For Spark Scala average rating see: `workdir/videos/SCALA_AVG_RATING.tar.xz`
+
 
 The analysis of the execution times are in the report here.
 
