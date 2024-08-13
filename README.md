@@ -148,7 +148,7 @@ The ouput if of the form `ACTOR \t AVGRATING`.
 
 `ACTOR` is the code of the actor and `AVGRATING` is the average rating of the actor.
 
-The output I generated is at `workdir/outputs/SCALA_AvgRating.txt`.
+The output I generated is at [`workdir/outputs/SCALA_AvgRating.txt`](https://github.com/Longferret/Docker-Hadoop-Spark/blob/master/workdir/outputs/SCALA_AvgRating.txt).
 
 
 
@@ -168,9 +168,9 @@ The specification of my laptop:
 
 
 I made videos demonstrating the execution of each program:
-* For Hadoop Separation degree see: `workdir/videos/MR_SEP_DEG.tar.xz`
-* For Hadoop average rating see: `workdir/videos/MR_AVG_RATING.tar.xz`
-* For Spark Scala average rating see: `workdir/videos/SCALA_AVG_RATING.tar.xz`
+* For Hadoop Separation degree see: [`workdir/videos/MR_SEP_DEG.tar.xz`](https://github.com/Longferret/Docker-Hadoop-Spark/blob/master/videos/MR_SEP_DEG.tar.xz)
+* For Hadoop average rating see: [`workdir/videos/MR_AVG_RATING.tar.xz`](https://github.com/Longferret/Docker-Hadoop-Spark/blob/master/videos/MR_AVG_RATING.tar.xz)
+* For Spark Scala average rating see: [`workdir/videos/SCALA_AVG_RATING.tar.xz`](https://github.com/Longferret/Docker-Hadoop-Spark/blob/master/videos/SCALA_AVG_RATING.tar.xz)
 
 
 The analysis of the execution times are in the report here.
