@@ -1,175 +1,164 @@
-[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/big-data-europe/Lobby)
 
-# Docker multi-container environment with Hadoop and Spark
+# Presentation
+This work is part of the course INFO8002-1 Topics in Distributed Systems.
 
-This is it: a Docker multi-container environment with Hadoop (HDFS) and Spark. But without the large memory requirements of a Cloudera sandbox. (On my Windows 10 laptop (with WSL2) it seems to consume a mere 3 GB.)
+By Henry Leclipteur, student at the university of Liège.
 
-
-## Quick Start
-
-To deploy an the HDFS-Spark cluster, run:
-```
-  docker-compose up
-```
-
-`docker-compose` creates a docker network that can be found by running `docker network list`, e.g. `docker-hadoop-spark`.
-
-Run `docker network inspect` on the network (e.g. `docker-hadoop-spark`) to find the IP the hadoop interfaces are published on. Access these interfaces with the following URLs:
-
-* Namenode: http://<dockerhadoop_IP_address>:9870/dfshealth.html#tab-overview
-* History server: http://<dockerhadoop_IP_address>:8188/applicationhistory
-* Datanode: http://<dockerhadoop_IP_address>:9864/
-* Nodemanager: http://<dockerhadoop_IP_address>:8042/node
-* Resource manager: http://<dockerhadoop_IP_address>:8088/
-* Spark master: http://<dockerhadoop_IP_address>:8080/
-* Spark worker 1: http://<dockerhadoop_IP_address>:8081/
-* Spark worker 2: http://<dockerhadoop_IP_address>:8082/
-* Spark worker 3: http://<dockerhadoop_IP_address>:8083/
-
-## Important note regarding Docker Desktop
-Since Docker Desktop turned “Expose daemon on tcp://localhost:2375 without TLS” off by default there have been all kinds of connection problems running the complete docker-compose. Turning this option on again (Settings > General > Expose daemon on tcp://localhost:2375 without TLS) makes it all work. I’m still looking for a more secure solution to this.
+It was asked (A) to compute the separation degree of any actor and (B) answer the question: What is the average rating of movies per actor ?
+Using Hadoop and Spark Scala.
 
 
-## Quick Start HDFS
+The data we used where from the [IMDb datasets](https://developer.imdb.com/non-commercial-datasets/)
 
-Copy breweries.csv to the namenode.
-```
-  docker cp breweries.csv namenode:breweries.csv
-```
+I will not explain here the details of the code and the algorithms used, only how to run them and get the results.
 
-Go to the bash shell on the namenode with that same Container ID of the namenode.
-```
-  docker exec -it namenode bash
-```
+See the report for the details on code.
 
 
-Create a HDFS directory /data//openbeer/breweries.
+# Docker Set up
+First we need to deploy an the HDFS-Spark cluster, run:
 
 ```
-  hdfs dfs -mkdir -p /data/openbeer/breweries
+docker-compose up
 ```
 
-Copy breweries.csv to HDFS:
+While docker do its things, download the files [title.principals.tsv](https://datasets.imdbws.com/) and [title.ratings.tsv](https://datasets.imdbws.com/) and place them in the "workdir" directory (not mandatory but you will need to change directory to upload data to hdfs).
+
+Once the HDFS-Spark cluster is deployed, let's create folders inside the namenode and hdfs.
+
+Note: All the command lines listed from here are made to work from the host terminal inside the directory "workdir".
 ```
-  hdfs dfs -put breweries.csv /data/openbeer/breweries/breweries.csv
-```
-
-
-## Quick Start Spark (PySpark)
-
-Go to http://<dockerhadoop_IP_address>:8080 or http://localhost:8080/ on your Docker host (laptop) to see the status of the Spark master.
-
-Go to the command line of the Spark master and start PySpark.
-```
-  docker exec -it spark-master bash
-
-  /spark/bin/pyspark --master spark://spark-master:7077
+docker exec -it namenode bash
+mkdir Separation_Degree
+mkdir Separation_Degree/Separation_Degree_classes
+mkdir AvgRating
+mkdir AvgRating/Separation_Degree_classes
+hdfs dfs -mkdir -p /data/openbeer/WorkDir
+hdfs dfs -mkdir -p /data/openbeer/WorkDir/inputs
 ```
 
-Load breweries.csv from HDFS.
-```
-  brewfile = spark.read.csv("hdfs://namenode:9000/data/openbeer/breweries/breweries.csv")
-  
-  brewfile.show()
-+----+--------------------+-------------+-----+---+
-| _c0|                 _c1|          _c2|  _c3|_c4|
-+----+--------------------+-------------+-----+---+
-|null|                name|         city|state| id|
-|   0|  NorthGate Brewing |  Minneapolis|   MN|  0|
-|   1|Against the Grain...|   Louisville|   KY|  1|
-|   2|Jack's Abby Craft...|   Framingham|   MA|  2|
-|   3|Mike Hess Brewing...|    San Diego|   CA|  3|
-|   4|Fort Point Beer C...|San Francisco|   CA|  4|
-|   5|COAST Brewing Com...|   Charleston|   SC|  5|
-|   6|Great Divide Brew...|       Denver|   CO|  6|
-|   7|    Tapistry Brewing|     Bridgman|   MI|  7|
-|   8|    Big Lake Brewing|      Holland|   MI|  8|
-|   9|The Mitten Brewin...| Grand Rapids|   MI|  9|
-|  10|      Brewery Vivant| Grand Rapids|   MI| 10|
-|  11|    Petoskey Brewing|     Petoskey|   MI| 11|
-|  12|  Blackrocks Brewery|    Marquette|   MI| 12|
-|  13|Perrin Brewing Co...|Comstock Park|   MI| 13|
-|  14|Witch's Hat Brewi...|   South Lyon|   MI| 14|
-|  15|Founders Brewing ...| Grand Rapids|   MI| 15|
-|  16|   Flat 12 Bierwerks| Indianapolis|   IN| 16|
-|  17|Tin Man Brewing C...|   Evansville|   IN| 17|
-|  18|Black Acre Brewin...| Indianapolis|   IN| 18|
-+----+--------------------+-------------+-----+---+
-only showing top 20 rows
+Then upload the data we just downloaded from the host to hdfs.
 
 ```
-
-
-
-## Quick Start Spark (Scala)
-
-Go to http://<dockerhadoop_IP_address>:8080 or http://localhost:8080/ on your Docker host (laptop) to see the status of the Spark master.
-
-Go to the command line of the Spark master and start spark-shell.
-```
-  docker exec -it spark-master bash
-  
-  spark/bin/spark-shell --master spark://spark-master:7077
+docker cp title.principals.tsv namenode:title.principals.tsv
+docker cp title.ratings.tsv namenode:title.ratings.tsv
+docker exec -it namenode bash
+hdfs dfs -put -f title.principals.tsv   /data/openbeer/WorkDir/inputs/title.principals.tsv  
+hdfs dfs -put -f title.ratings.tsv   /data/openbeer/WorkDir/inputs/title.ratings.tsv  
 ```
 
-Load breweries.csv from HDFS.
-```
-  val df = spark.read.csv("hdfs://namenode:9000/data/openbeer/breweries/breweries.csv")
-  
-  df.show()
-+----+--------------------+-------------+-----+---+
-| _c0|                 _c1|          _c2|  _c3|_c4|
-+----+--------------------+-------------+-----+---+
-|null|                name|         city|state| id|
-|   0|  NorthGate Brewing |  Minneapolis|   MN|  0|
-|   1|Against the Grain...|   Louisville|   KY|  1|
-|   2|Jack's Abby Craft...|   Framingham|   MA|  2|
-|   3|Mike Hess Brewing...|    San Diego|   CA|  3|
-|   4|Fort Point Beer C...|San Francisco|   CA|  4|
-|   5|COAST Brewing Com...|   Charleston|   SC|  5|
-|   6|Great Divide Brew...|       Denver|   CO|  6|
-|   7|    Tapistry Brewing|     Bridgman|   MI|  7|
-|   8|    Big Lake Brewing|      Holland|   MI|  8|
-|   9|The Mitten Brewin...| Grand Rapids|   MI|  9|
-|  10|      Brewery Vivant| Grand Rapids|   MI| 10|
-|  11|    Petoskey Brewing|     Petoskey|   MI| 11|
-|  12|  Blackrocks Brewery|    Marquette|   MI| 12|
-|  13|Perrin Brewing Co...|Comstock Park|   MI| 13|
-|  14|Witch's Hat Brewi...|   South Lyon|   MI| 14|
-|  15|Founders Brewing ...| Grand Rapids|   MI| 15|
-|  16|   Flat 12 Bierwerks| Indianapolis|   IN| 16|
-|  17|Tin Man Brewing C...|   Evansville|   IN| 17|
-|  18|Black Acre Brewin...| Indianapolis|   IN| 18|
-+----+--------------------+-------------+-----+---+
-only showing top 20 rows
+That's it we are all set up to run the different algorithms !
 
-```
+## Separation Degree using Hadoop
+To calculate the separation degree of any actor, we will use the file "Separation_Degree.java".
+It will compute the sepration degree of all actor given a certain actor (or a list of actor).
 
-How cool is that? Your own Spark cluster to play with.
+Here we will calculate the Streep number (Meryl Streep). 
+
+Code of known actors:
+* Meryl Streep  nm0000658
+* Kevin Bacon   nm3636162
+
+The code of any actor can be found in the [IMDb datasets](https://developer.imdb.com/) thanks to the file "name.basic.tsv".
 
 
-## Configure Environment Variables
-
-The configuration parameters can be specified in the hadoop.env file or as environmental variables for specific services (e.g. namenode, datanode etc.):
+First upload the file "Separation_Degree.java" and compile it.
 ```
-  CORE_CONF_fs_defaultFS=hdfs://namenode:8020
-```
-
-CORE_CONF corresponds to core-site.xml. fs_defaultFS=hdfs://namenode:8020 will be transformed into:
-```
-  <property><name>fs.defaultFS</name><value>hdfs://namenode:8020</value></property>
-```
-To define dash inside a configuration parameter, use triple underscore, such as YARN_CONF_yarn_log___aggregation___enable=true (yarn-site.xml):
-```
-  <property><name>yarn.log-aggregation-enable</name><value>true</value></property>
+docker cp Separation_Degree.java namenode:Separation_Degree/Separation_Degree.java
+docker exec -it namenode bash
+hdfs dfs -put -f Separation_Degree/Separation_Degree.java /data/openbeer/WorkDir/Separation_Degree.java
+javac -d Separation_Degree/Separation_Degree_classes Separation_Degree/Separation_Degree.java -cp $(hadoop classpath)
+jar -cvf Separation_Degree/Separation_Degree.jar -C Separation_Degree/Separation_Degree_classes/ .
 ```
 
-The available configurations are:
-* /etc/hadoop/core-site.xml CORE_CONF
-* /etc/hadoop/hdfs-site.xml HDFS_CONF
-* /etc/hadoop/yarn-site.xml YARN_CONF
-* /etc/hadoop/httpfs-site.xml HTTPFS_CONF
-* /etc/hadoop/kms-site.xml KMS_CONF
-* /etc/hadoop/mapred-site.xml  MAPRED_CONF
+Then remove the folder "output_sep_deg" (if existing) and run the code.
+```
+hdfs dfs -rm -r /data/openbeer/WorkDir/output_sep_deg
+hadoop jar Separation_Degree/Separation_Degree.jar org.myorg.Separation_Degree /data/openbeer/WorkDir/inputs/title.principals.tsv /data/openbeer/WorkDir/output_sep_deg
+```
 
-If you need to extend some other configuration file, refer to base/entrypoint.sh bash script.
+Finally retreive the output from hdfs to the host using
+```
+rm -r part-00000
+hdfs dfs -copyToLocal /data/openbeer/WorkDir/output_sep_deg/Final/part-00000
+exit
+docker cp namenode:part-00000 output.txt 
+```
+
+And that's it, we have the separation degree of all actors from a given actor in "output.txt".
+
+The ouput if of the form `SEP_ACTOR \t ACTOR \t DISTANCE`.
+
+The `ACTOR` has a separation degree of `DISTANCE` from `SEP_ACTOR` and `SEP_ACTOR`, `ACTOR` are the codes of the actors.
+
+The output I generated (compressed) is in the folder `workdir/outputs` as MR_Sep_Deg.txt
+
+## Average Rating using Hadoop
+To calculate the average rating of all actors, we will use the file "AvgRating.java".
+It will compute the average rating for all actors (average of rating of all films).
+
+First upload the file "AvgRating.java" and compile it.
+```
+docker cp AvgRating.java namenode:AvgRating/AvgRating.java
+docker exec -it namenode bash
+hdfs dfs -put -f AvgRating/AvgRating.java /data/openbeer/WorkDir/AvgRating.java
+javac -d AvgRating/AvgRating_classes AvgRating/AvgRating.java -cp $(hadoop classpath)
+jar -cvf AvgRating/AvgRating.jar -C AvgRating/AvgRating_classes/ .
+```
+
+Then remove the folder "output_avg_rating" (if existing) and run the code.
+```
+hdfs dfs -rm -r /data/openbeer/WorkDir/output_avg_rating
+hadoop jar AvgRating/AvgRating.jar org.myorg.AvgRating /data/openbeer/WorkDir/inputs /data/openbeer/WorkDir/output_avg_rating
+```
+
+Finally retreive the output from hdfs to the host using
+```
+rm -r part-00000
+hdfs dfs -copyToLocal /data/openbeer/WorkDir/output_avg_rating/Final/part-00000
+exit
+docker cp namenode:part-00000 outputs/output.txt 
+```
+
+And that's it, we have the average rating of all actors in "output.txt".
+
+The ouput if of the form `ACTOR \t AVGRATING`.
+
+`ACTOR` is the code of the actor and `AVGRATING` is the average rating of the actor.
+
+The output I generated (compressed) is in the folder `workdir/outputs` as MR_AvgRating.txt
+
+
+## Average Rating using Spark Scala
+We will use here the file "AverageRating.scala".
+
+To run the code:
+```
+docker exec -it spark-master bash
+cd /opt/info8002/
+/spark/bin/spark-shell --master spark://spark-master:7077
+:load AverageRating.scala
+```
+
+The output is located in `workdir/outputs/SCALA_AvgRating.txt`
+
+The ouput if of the form `ACTOR \t AVGRATING`.
+
+`ACTOR` is the code of the actor and `AVGRATING` is the average rating of the actor.
+
+The output I generated (compressed) is in the folder `workdir/outputs` as SCALA_AvgRating.txt
+
+
+
+# Execution Times
+
+| Algorithm    | Time |
+| -------- | ------- |
+| Separation_Degree.java  | 1h 20min    |
+| AvgRating.java | 4 min     |
+| AverageRating.scala    | 58 sec     |
+
+2 Videos demonstrating the execution of average rating in Scala and Hadoop are in the folder `videos`.
+
+The analysis of the execution times are in the report here.
+
