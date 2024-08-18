@@ -93,7 +93,7 @@ The `ACTOR` has a separation degree of `DISTANCE` from `SEP_ACTOR` and `SEP_ACTO
 
 A Distance of 2147483647 means the actor is not connected to the separation actor.
 
-The output I generated is at `workdir/outputs/MR_Sep_Deg.txt`.
+The output I generated is at [`workdir/outputs/MR_Sep_Deg.txt`](https://github.com/Longferret/Docker-Hadoop-Spark/blob/master/workdir/outputs/MR_Sep_Deg.txt).
 
 ## Average Rating using Hadoop
 To calculate the average rating of all actors, we will use the file "AvgRating.java".
@@ -128,8 +128,31 @@ The ouput if of the form `ACTOR \t AVGRATING`.
 
 `ACTOR` is the code of the actor and `AVGRATING` is the average rating of the actor.
 
-The output I generated is at `workdir/outputs/MR_AvgRating.txt`.
+The output I generated is at [`workdir/outputs/MR_AvgRating.txt`](https://github.com/Longferret/Docker-Hadoop-Spark/blob/master/workdir/outputs/MR_AvgRating.txt).
 
+
+## Separation Degree using Spark Scala
+We will use here the file "Separation_Degree.scala".
+
+To run the code:
+```
+docker exec -it spark-master bash
+cd /opt/info8002/
+/spark/bin/spark-shell --master spark://spark-master:7077
+:load Separation_Degree.scala
+```
+
+The output is located in `workdir/outputs/SCALA_SEP_DEG.txt`
+
+The ouput if of the form `(ACTOR, DISTANCE)`.
+
+The `ACTOR` has a separation degree of `DISTANCE`.
+
+`ACTOR` are the codes of the actors.
+
+A Distance of 2147483647 means the actor is not connected to the separation actor.
+
+The output we generated is at [`workdir/outputs/SCALA_SEP_DEG.txt`](https://github.com/Longferret/Docker-Hadoop-Spark/blob/master/workdir/outputs/SCALA_SEP_DEG.txt).
 
 ## Average Rating using Spark Scala
 We will use here the file "AverageRating.scala".
@@ -168,10 +191,10 @@ The specification of my laptop:
 
 
 I made videos demonstrating the execution of each program:
-* For Hadoop Separation degree see: [`workdir/videos/MR_SEP_DEG.tar.xz`](https://github.com/Longferret/Docker-Hadoop-Spark/blob/master/videos/MR_SEP_DEG.tar.xz)
-* For Hadoop average rating see: [`workdir/videos/MR_AVG_RATING.tar.xz`](https://github.com/Longferret/Docker-Hadoop-Spark/blob/master/videos/MR_AVG_RATING.tar.xz)
-* For Spark Scala average rating see: [`workdir/videos/SCALA_AVG_RATING.tar.xz`](https://github.com/Longferret/Docker-Hadoop-Spark/blob/master/videos/SCALA_AVG_RATING.tar.xz)
+* For Hadoop Separation degree see: [`videos/MR_SEP_DEG.tar.xz`](https://github.com/Longferret/Docker-Hadoop-Spark/blob/master/videos/MR_SEP_DEG.tar.xz)
+* For Hadoop average rating see: [`videos/MR_AVG_RATING.tar.xz`](https://github.com/Longferret/Docker-Hadoop-Spark/blob/master/videos/MR_AVG_RATING.tar.xz)
+* For Spark Scala average rating see: [`videos/SCALA_AVG_RATING.tar.xz`](https://github.com/Longferret/Docker-Hadoop-Spark/blob/master/videos/SCALA_AVG_RATING.tar.xz)
 
 
-The analysis of the execution times are in the report here.
+The analysis of the execution times are in the report.
 
