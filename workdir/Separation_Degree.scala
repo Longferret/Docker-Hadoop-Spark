@@ -3,12 +3,8 @@ import java.io.File
 import scala.collection.mutable.ListBuffer
 import org.apache.spark.rdd.RDD
 
-//val ratings = sc.textFile("hdfs://namenode:9000/data/openbeer/WorkDir/inputs/title.ratings.tsv")
-
-
-
 def step(inf_count:Int, current_dist:Int, stop:Boolean, start_rdd:RDD[(String,String)]): RDD[(String,String)] = {
-    
+    val inf = 2147483647
     // Base case
     if(stop){
         // Return
@@ -32,7 +28,7 @@ def step(inf_count:Int, current_dist:Int, stop:Boolean, start_rdd:RDD[(String,St
                 var act2 = array2(0)
 
                 // both are in the same movie, but there is no kevin bacon
-                if(dist1.toInt >= inf_count && dist2.toInt >= inf_count){
+                if(dist1.toInt >= inf && dist2.toInt >= inf){
                     act1 + "," + act2  + "\t" + String.valueOf(dist1.toInt)
                 }   
 
@@ -139,7 +135,7 @@ def step(inf_count:Int, current_dist:Int, stop:Boolean, start_rdd:RDD[(String,St
 val principals = sc.textFile("hdfs://namenode:9000/data/openbeer/WorkDir/inputs/title.principals.tsv")
 
 val sep_actor = "nm0000658"
-val max_depth = 2
+
 val inf = 2147483647
 
 
@@ -162,96 +158,48 @@ val init_rdd = principals.map(
 
 // Compute all the KB degrees
 val result = step(inf, 1, false, init_rdd)
+
+
 /*
-result.filter{case(title,data) => {
-    data.split("\t")(1).toInt < inf
-}}.count()
-result.filter{case(title, data) => {
-    //data.split("\t")(1).toInt < inf
-    data.split("\t")(0) < inf
-}}.top(50).foreach{case(a) => printf(s"${a}\n")}
+Let's do one more round to only have (actor, dist)
+Remove titles, we no longer need them at this point
+Now have (actor, dist)
 */
-
-// Let's do one more round to only have (actor, dist)
-
-val rdd1 = result.reduceByKey(
-    (line1, line2) =>{
-        val array1 = line1.split("\t")
-        var dist1 = array1(1)
-        var act1 = array1(0)
-
-        val array2 = line2.split("\t")
-        var dist2 = array2(1)
-        var act2 = array2(0)
-
-        // both are in the same movie, but there is no kevin bacon
-        if(dist1.toInt >= inf && dist2.toInt >= inf){
-            act1 + "," + act2  + "\t" + String.valueOf(dist1.toInt)
-        }   
-
-        // at least one of the actors is linked to kevin bacon
-        else{
-            if(dist2.toInt > dist1.toInt){
-                act1 + "," + act2  + "\t" + String.valueOf(dist1.toInt)
-            }
-            else{
-                act1 + "," + act2  + "\t" + String.valueOf(dist2.toInt)
-            }
-        }
-    } // Unfortunately here, we are counting the amount of other 
-    // actors in one same movie with KB
-    // Let's have another map to replace that with the current distance
-)
-
-/* 3 : Flat map to obtain
-    key :  actor
-    value : title, actor
-*/
-val rdd2 = rdd1.flatMap{ 
+val rdd1 = result.map{
     case(title, data) => {
-        val array = data.split("\t")
-        val actors = array(0).split(",") // array(1) is dist
-        val dist = array(1)
-        actors.map(actor => (actor, array(1)))
+        val actor = data.split("\t")(0)
+        val dist = data.split("\t")(1)
+        (actor,dist)
     }
 }
 
-/* 4 : Reduce by key to obtain
-    key : actor :
-    value : title1, ..., titleN, dist
+/*
+Reduce by key to only have one instance of each actor
+keeping only the minimum distance
 */
-val rdd3 = rdd2.reduceByKey(
-    (line1, line2) =>{
-        var dist1 = line1.toInt
-        var dist2 = line2.toInt
 
-        if(dist1.toInt >= inf && dist2.toInt >= inf){
-            String.valueOf("2147483647")
+val rdd2 = rdd1.reduceByKey(
+    (line1,line2) =>{
+        if(line2.toInt > line1.toInt){
+            line1//String.valueOf(line1.toInt)
         }
         else{
-            if(dist2.toInt > dist1.toInt){
-                String.valueOf(dist1.toInt)
-            }
-            else{
-                String.valueOf(dist2.toInt)
-            }
+            line2//String.valueOf(line2.toInt)
         }
     }
-)
-/*
-rdd3.filter{case(title,data) => {
-    data.toInt < inf
+) 
+
+rdd2.filter{case(actor,dist) => {
+    dist.toInt < 1
 }}.count()
-rdd3.filter{case(title, data) => {
-    //data.split("\t")(1).toInt < inf
-    data.toInt < inf
-}}.top(100).foreach{case(a) => printf(s"${a}\n")}
-*/
+rdd2.filter{case(actor, dist) => {
+    dist.toInt < 1
+    //data.split("\t")(0) < inf
+}}.top(50).foreach{case(a) => printf(s"${a}\n")}
+
 
 // Print to file
 
-
-val fileWriter = new FileWriter(new File("outputs/SCALA_SEP_DEG.txt"))
-rdd3.collect().foreach{case(a) => fileWriter.write(s"${a}\n")}
+val fileWriter = new FileWriter(new File("SCALA_SEP_DEG.txt"))
+rdd2.collect().foreach{case(a) => fileWriter.write(s"${a}\n")}
 fileWriter.close()
-
